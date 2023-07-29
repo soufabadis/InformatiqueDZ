@@ -28,6 +28,10 @@ var userSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
+    role : {
+        type :String,
+        default : "user"
+    }
 });
 
 //hash password
@@ -40,8 +44,12 @@ userSchema.pre("save",async function(next){
         throw new Error(err);
       }
 })
+
+//compare password
 userSchema.methods.isPassword = async function(ispassword) {
     try {
+        console.log('ispassword:', ispassword);
+        console.log('this.password:', this.password);
       return await bcrypt.compare(ispassword, this.password);
     } catch (err) {
       throw new Error(err);
