@@ -82,8 +82,54 @@ const findUserById = asyncHandler(async (req, res) => {
   }
 });
 
+//delete user 
+
+const deleteUserById = asyncHandler(async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const deleteUser = await Users?.findByIdAndDelete({_id:userId});
+
+    if (deleteUser) {
+         res.json("user deleted seccessfully");
+          } else {
+      res.json({ message: `User with ID "${userId}" not found.` });
+    }
+  } catch (err) {
+    res.json({ message: 'Something went wrong.' });
+  }
+});
+
+//update user information 
+const updateUserById = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          lastname: req.body?.lastname,
+          email: req.body?.email,
+          firstname: req.body?.firstname,
+          mobile: req.body?.mobile,
+        },
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (updatedUser) {
+      res.json("User Updated Successfully: " + updatedUser);
+    } else {
+      res.json({ message: `User with ID "${userId}" not found.` });
+    }
+  } catch (err) {
+    res.json({ message: 'Something went wrong.' });
+  }
+});
 
 
 
-
-module.exports = { createUser, loginCotroller,getAllUsers,findUserById};
+module.exports = { createUser, loginCotroller,getAllUsers,findUserById,
+  deleteUserById,updateUserById};

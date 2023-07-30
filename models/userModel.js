@@ -1,6 +1,5 @@
 const mongoose = require('mongoose'); 
 const bcrypt = require('bcrypt');
-const asyncHandler = require("express-async-handler");
 
 
 var userSchema = new mongoose.Schema({
@@ -31,7 +30,23 @@ var userSchema = new mongoose.Schema({
     role : {
         type :String,
         default : "user"
-    }
+    },
+    carte : {
+        type : Array ,
+        default : []
+    },
+    address : {
+        type : Object,
+        ref : 'address'  
+    },
+    wishlist : {
+        type : Object ,
+        ref : 'product'
+    }, 
+    
+} ,
+{
+    timestamps : true ,
 });
 
 //hash password
@@ -48,8 +63,7 @@ userSchema.pre("save",async function(next){
 //compare password
 userSchema.methods.isPassword = async function(ispassword) {
     try {
-        console.log('ispassword:', ispassword);
-        console.log('this.password:', this.password);
+       
       return await bcrypt.compare(ispassword, this.password);
     } catch (err) {
       throw new Error(err);
