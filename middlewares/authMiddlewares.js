@@ -14,8 +14,10 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     token = req.headers.authorization.split(" ")[1];
     if (token) {
       const decoded = jwt.verify(token, privateKey);
-      const user = await Users?.findOne({email :decoded})    // Optionally, you can attach the decoded user data to the request object for later use
-      user = req.User; 
+      const userEmail = decoded.email; // Extract the email from the decoded JWT payload
+      const user = await Users.findOne({ email: userEmail }); // Find the user by email in the database
+      
+      req.user = user;
       next(); // Proceed to the next middleware or route handler
     } else {
       // No token found in the header
@@ -26,5 +28,17 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     throw new Error("Token not found in headers.");
   }
 });
+ 
+// check Admin user 
 
-module.exports = authMiddleware ;
+const isAdmin = asyncHandler(async (req, res, next) => {
+  email = req.user.email;
+  const adminUser = await Users?.findOne({ email: email });
+  if (adminUser.role !== "admin") {
+    throw new Error("you are not an admin");
+  } else {
+    next();
+  }
+});
+
+module.exports = { authMiddleware,isAdmin};

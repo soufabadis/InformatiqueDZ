@@ -31,6 +31,10 @@ var userSchema = new mongoose.Schema({
         type :String,
         default : "user"
     },
+    block : {
+        type : Boolean ,
+        default : false,
+    },
     carte : {
         type : Array ,
         default : []

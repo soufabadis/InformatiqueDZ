@@ -2,6 +2,7 @@ const Users = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const tokenGenerator = require('../config/webToken');
 
+
 // create new user
 const createUser = asyncHandler(async (req, res) => {
   const useremail = req.body.email;
@@ -35,7 +36,8 @@ const loginCotroller = asyncHandler(async (req, res) => {
           email : searchUser?.email,
           mobile : searchUser?.firstname,
           role : searchUser?.role,
-          token : tokenGenerator(searchUser?.id)
+          // pass id and email to token generator
+          token : tokenGenerator(searchUser?.id,searchUser?.email)
         }
 
       );
@@ -64,7 +66,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 // Route handler to find a user by ID
-const findUserById = asyncHandler(async (req, res) => {
+const findUserById = asyncHandler(async (req, res,next) => {
   const userId = req.params.userId;
   try {
     const user = await Users.findOne({_id:userId});
@@ -73,6 +75,7 @@ const findUserById = asyncHandler(async (req, res) => {
       const userWithoutPassword = { ...user.toObject() };
       delete userWithoutPassword.password;
       res.json(user);
+      next();
     } else {
       res.json({ message: `User with ID "${userId}" not found.` });
     }
@@ -101,11 +104,10 @@ const deleteUserById = asyncHandler(async (req, res) => {
 
 //update user information 
 const updateUserById = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-
+   const id = req.user._id;
   try {
     const updatedUser = await Users.findOneAndUpdate(
-      { _id: userId },
+      { _id: id },
       {
         $set: {
           lastname: req.body?.lastname,
@@ -129,7 +131,31 @@ const updateUserById = asyncHandler(async (req, res) => {
   }
 });
 
+// Block user
 
+const blockUser = asyncHandler( async(req,res)=>{
+  const id = req.user._id;
+  const blockUser = await Users.findOneAndUpdate({ _id: id},{$set :{ block :true}},{ new : true})
+  if(blockUser){
+    res.json("User blocked Successfully: " );
+  }
+  else {
+    throw new Error('Something went wrong.')
+  }
+
+})
+//Unblock User
+
+const unBlockUser = asyncHandler( async(req,res)=>{
+  const id = req.user._id;
+  const blockUser = await Users.findOneAndUpdate({ _id: id},{$set :{ block :false}},{ new : true})
+  if(blockUser){
+    res.json("User unblocked Successfully: " );
+  }
+  else {
+    throw new Error('Something went wrong.')
+  }
+})
 
 module.exports = { createUser, loginCotroller,getAllUsers,findUserById,
-  deleteUserById,updateUserById};
+  deleteUserById,updateUserById,blockUser,unBlockUser};

@@ -10,10 +10,10 @@ const privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
 
 
 
-const tokenGenerator= function(id){
-
+const tokenGenerator = function(id,email) {
      const expiresIn = '3d'; // 3 days
-     let token = jwt.sign({foo : id}, privateKey, { algorithm: 'RS256', expiresIn});
-     return token ;
-};
-module.exports=tokenGenerator ;
+     let token = jwt.sign({ id :id ,email: email  }, privateKey, { algorithm: 'RS256', expiresIn });
+     return token;
+   };
+   
+   module.exports = tokenGenerator;
