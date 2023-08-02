@@ -23,6 +23,10 @@ var userSchema = new mongoose.Schema({
         required:true,
         unique:true,
     },
+    refreshtoken : {
+        type : String,
+        default : "",
+    },
     password:{
         type:String,
         required:true,
@@ -39,12 +43,13 @@ var userSchema = new mongoose.Schema({
         type : Array ,
         default : []
     },
+    
     address : {
-        type : Object,
+        type :mongoose.Schema.Types.ObjectId ,
         ref : 'address'  
     },
     wishlist : {
-        type : Object ,
+        type : mongoose.Schema.Types.ObjectId ,
         ref : 'product'
     }, 
     

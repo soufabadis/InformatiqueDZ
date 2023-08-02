@@ -11,7 +11,7 @@ const privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
 
 
 const tokenGenerator = function(id,email) {
-     const expiresIn = '3d'; // 3 days
+     const expiresIn = '1d'; // minimum possibe days
      let token = jwt.sign({ id :id ,email: email  }, privateKey, { algorithm: 'RS256', expiresIn });
      return token;
    };
