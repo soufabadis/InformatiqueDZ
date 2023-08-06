@@ -57,14 +57,42 @@ const getAllProducts = asyncHandler(async (req, res) => {
   if (req.query.sort) {
     const sortedBy = req.query.sort.split(',').join(' ');
     allProductsQuery = allProductsQuery.sort(sortedBy);
-    console.log(sortedBy);
   } else {
     allProductsQuery = allProductsQuery.sort('createdAt');
   }
 
+  // 3-3 limite the fields 
+
+  if (req.query.fields) {
+    const limitedBy = req.query.fields.split(',').join(' ');
+    allProductsQuery = allProductsQuery.select(limitedBy);
+    console.log(limitedBy);
+  } else {
+    allProductsQuery = allProductsQuery.select('-__v');
+  }
+
+  // 3-4 Pagination 
+  let page = req.query.page;
+  const limit = req.query.limit || 3; // Default limit is 3
+
+  if (!page || page < 1) {
+    page = 1;
+  }
+
+  const skipCount = (page - 1) * limit;
+//  Count the total documents without processing the data
+  if(req.query.page){
+    const countProduct = await Product.countDocuments();
+    if(skipCount >= countProduct )
+    throw new Error('this page not exist');
+  }
+
+
+ allProductsQuery =  allProductsQuery.skip(skipCount).limit(limit);
+
   try {
 
-    // execute 
+    // execute all previous proccess
     const allProducts = await allProductsQuery.exec();
 
     if (!allProducts.length) {
@@ -97,6 +125,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     res.json(updatedProduct);
   }
 });
+
 // delete product by id 
 
 const deletedProduct = asyncHandler(async (req, res) => {
