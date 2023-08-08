@@ -4,6 +4,7 @@ const tokenGenerator = require("../config/webToken");
 const refreshTokenGenerator = require("../config/refreshToken")
 const jwt = require("jsonwebtoken");
 const fs = require('fs');
+const idValidator = require("../Utils/idValidator");
 const dotenv = require('dotenv');
 dotenv.config(); 
 
@@ -265,6 +266,40 @@ const unBlockUser = asyncHandler(async (req, res) => {
   }
 });
 
+// 10 - update password 
+
+const updatePassword = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const newPassword = req.body.password;
+  var  user = await Users.findById({_id : userId});
+      
+  idValidator(userId);
+
+  try {
+    if (newPassword) {
+      // Find the user by ID
+          
+      // Update the password in the user object
+      user.password = newPassword;
+           
+      // Use `markModified` to trigger the pre-save middleware for the `password` field
+      user.markModified('password');
+
+      // Save the user object with the updated password
+       var updatedPassword = await user.save();
+
+
+      res.json(updatedPassword);
+    } else {
+      res.status(400).json(user);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+  
+
 module.exports = {
   createUser,
   loginCotroller,
@@ -276,4 +311,5 @@ module.exports = {
   updateUserById,
   blockUser,
   unBlockUser,
+  updatePassword,
 };
