@@ -94,11 +94,16 @@ userSchema.methods.isPassword = async function(ispassword) {
     }
   };
 
-  userSchema.methods.resetPasswordToken = async function() {
-        const resettoken = crypto.randomBytes(32).toString('hex');
-        this.passwordResetToken = crypto.createHash('sha256').update(resettoken).digest('hex') ;
-        this.passwordResetExpire = Date.now() + 10*60*1000 ; //10min 
-        return resettoken ;
-  }
+
+  userSchema.methods.resetPasswordToken = function() {
+    const resetToken = crypto.randomBytes(32).toString('hex'); // Generate a random token
+    const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex'); // Hash the token
+  
+    this.passwordResetToken = hashedResetToken;
+    this.passwordResetExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+  
+    return resetToken; // Return the original token, not hashed
+  };
+  
 //Export the model
 module.exports = mongoose.model('User', userSchema);
