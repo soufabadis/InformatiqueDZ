@@ -5,6 +5,8 @@ const refreshTokenGenerator = require("../config/refreshToken")
 const jwt = require("jsonwebtoken");
 const fs = require('fs');
 const idValidator = require("../Utils/idValidator");
+const mailler =require("../controller/emailController");
+const crypto = require("crypto")
 const dotenv = require('dotenv');
 dotenv.config(); 
 
@@ -298,7 +300,60 @@ const updatePassword = asyncHandler(async (req, res) => {
   }
 });
 
-  
+ // 11 send email with nodemailer and generate updatepasswordToken 
+const updatePasswordToken = asyncHandler(async (req, res) => {
+  const email = req.body.email;
+  const user = await Users.findOne({ email: email });
+
+  if (!user) {
+    throw new Error("There is no user with this email");
+  }
+
+  try {
+    const token = await user.resetPasswordToken (); 
+    await user.save();
+
+    const url = "Hi, follow this link to reset your password: " + `<a href="http://localhost:5000/api/users/reset-password/${token}">click here</a>`;
+
+    mailler({
+      html: url,
+      to: email,
+      text: "Hello user",
+      subject: "Reset password link"
+    });
+
+    res.json({ message: "Reset password link sent successfully "  +token });
+
+  } catch (error) {s
+    throw new Error("Can't reset password");
+  }
+});
+
+// 12 reset password and validation
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const newPassword = req.body.password;
+  const token = req.params.token; // Use req.params.token to get the token from the URL parameter
+
+  const hashedResetToken = crypto.createHash('sha256').update(token).digest('hex'); // Hash the token
+  const user = await Users.findOne({
+    passwordResetToken: hashedResetToken,
+    passwordResetExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res.status(400).json({ error: "Invalid or expired reset token" });
+  }
+
+  // Update user's password and reset token fields
+  user.password = newPassword;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpire = undefined;
+  await user.save();
+
+  res.status(200).json({ message: "Password reset successful" });
+});
+
 
 module.exports = {
   createUser,
@@ -312,4 +367,6 @@ module.exports = {
   blockUser,
   unBlockUser,
   updatePassword,
+  updatePasswordToken ,
+  resetPassword ,
 };
