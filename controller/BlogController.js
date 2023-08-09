@@ -60,7 +60,8 @@ const findBlog = asyncHandler( async(req,res) => {
         }
         );
     
-    
+           // 4 - update All blogs
+
         const updateBlog = asyncHandler( async(req,res) => {
             const newBlogInf = req.body ;
             const blogId=req.body._id ;
@@ -82,7 +83,8 @@ const findBlog = asyncHandler( async(req,res) => {
             );
         
         
-        
+          // 5 - delete blog 
+
             const deleteBlog = asyncHandler( async(req,res) => {
                 const blogId=req.params ;
                 try {
