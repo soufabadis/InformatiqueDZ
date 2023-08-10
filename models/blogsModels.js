@@ -18,7 +18,7 @@ var userSchema = new mongoose.Schema({
        
     },
     numViews:{
-        type:String,
+        type:Number,
         default:0,
     },
     isLiked:{
@@ -46,7 +46,16 @@ var userSchema = new mongoose.Schema({
         type : String ,
         default : "" ,
         required :true  ,
-    } 
+    }  ,
+    
+    numLikes: {
+        type: Number,
+        default: 0,
+    },
+    numDislikes: {
+        type: Number,
+        default: 0,
+    },
 
 }, {
     toJSON  : {
