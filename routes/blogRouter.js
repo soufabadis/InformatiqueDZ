@@ -10,7 +10,7 @@ router.get("/",getAllBlog);
 router.get("/find-blog/:blogId",findBlog);
 router.put("/update-blog/:blogId",authMiddleware,isAdmin,updateBlog);
 router.delete("/delete-blog/:blogId",authMiddleware,isAdmin,deleteBlog);
-router.put("/delete-blog/:blogId",authMiddleware,isDislike);
-router.put("/delete-blog/:blogId",authMiddleware,isLike);
+router.put("/dislike-blog/:blogId",authMiddleware,isDislike);
+router.put("/like-blog/:blogId",authMiddleware,isLike);
 
 module.exports=router;

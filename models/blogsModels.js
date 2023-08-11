@@ -1,53 +1,52 @@
-const mongoose = require('mongoose'); 
+const mongoose = require('mongoose');
 
 // Declare the Schema of the Mongo model
-var userSchema = new mongoose.Schema({
-    title:{
-        type:String,
-        required:true,
-        
+const userSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
     },
-    description:{
-        type:String,
-        required:true,
-       
+    description: {
+        type: String,
+        required: true,
     },
-    category:{
-        type:String,
-        required:true,
-       
+    category: {
+        type: String,
+        required: true,
     },
-    numViews:{
-        type:Number,
-        default:0,
+    numViews: {
+        type: Number,
+        default: 0,
     },
-    isLiked:{
-        type:Boolean,
-        default:false,
+    isLiked: {
+        type: Boolean,
+        default: false,
     },
-    isDisliked:{
-        type:Boolean,
-        default:false,
+    isDisliked: {
+        type: Boolean,
+        default: false,
     },
-    likes : {
-        type : mongoose.Types.ObjectId ,
-        ref :'Users' ,
+    likes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+    ],
+    dislikes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+    ],
+    images: {
+        type: String,
+        default: '',
     },
-    dislikes : {
-        type : mongoose.Types.ObjectId ,
-        ref: 'Users'  
-    }
-    ,
-    images : {
-        type : String ,
-        default : "" ,
-    } , 
-    author : {
-        type : String ,
-        default : "" ,
-        required :true  ,
-    }  ,
-    
+    author: {
+        type: String,
+        default: '',
+        required: true,
+    },
     numLikes: {
         type: Number,
         default: 0,
@@ -56,17 +55,15 @@ var userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-
 }, {
-    toJSON  : {
-        virtual : true
-    } ,
-    toObject : {
-        virtual : true ,
-    } ,
-    timestamps : true  ,
-}
-);
+    toJSON: {
+        virtual: true,
+    },
+    toObject: {
+        virtual: true,
+    },
+    timestamps: true,
+});
 
-//Export the model
+// Export the model
 module.exports = mongoose.model('Blog', userSchema);
