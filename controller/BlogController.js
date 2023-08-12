@@ -2,6 +2,7 @@ const Blog = require("../models/blogsModels");
 const Users = require("../models/userModel");
 const asyncHandler = require('express-async-handler');
 const idValidator = require("../Utils/idValidator");
+const logger = require('../config/logger');
 
  /* 1- create new Blog 
     2 - find a blog 
@@ -17,111 +18,128 @@ const idValidator = require("../Utils/idValidator");
 
  /* 1- create new blog */
 
-const createBlog = asyncHandler( async(req,res) => {
-const blog=req.body ;
+ const createBlog = asyncHandler(async (req, res) => {
+    const blog = req.body;
 
-try {
-    const newBlog = Blog.create(blog);
-    res.json(newBlog);
-} catch(e){
-    throw new Error("Can 't create new blog") ;
-}
-
+    try {
+        logger.info('Creating a new blog:', blog);
+        const newBlog = await Blog.create(blog);
+        res.json(newBlog);
+    } catch (e) {
+        logger.error('Error creating a new blog:', e);
+        res.status(500).json({ message: "Something wrong!" });
+    }
 });
-
 
         // 2 - find a blog 
         const findBlog = asyncHandler(async (req, res) => {
             const { blogId } = req.params;
             idValidator(blogId);
+        
             try {
+                logger.info('Finding a blog with ID:', blogId);
+                
                 const foundBlog = await Blog.findByIdAndUpdate(
                     blogId,
                     { $inc: { numViews: 1 } },
                     { new: true }
                 )
-                .populate( {path :'dislikes' ,select :'firstname lastname email'})
-                .populate({path :'dislikes' ,select :'firstname lastname email'})
+                .populate({ path: 'dislikes', select: 'firstname lastname email' })
+                .populate({ path: 'dislikes', select: 'firstname lastname email' });
+        
                 if (foundBlog) {
+                    logger.info('Found a blog:', foundBlog);
                     res.json(foundBlog);
                 } else {
+                    logger.info('No blog found with ID:', blogId);
                     res.json({ message: "There is no blog" });
                 }
             } catch (e) {
-                console.error(e);
+                logger.error('Error finding a blog:', e);
                 res.status(500).json({ message: "Something wrong!" });
             }
         });
-        
-
 
         // 3 - fetch All blogs
 
-    const getAllBlog = asyncHandler( async(req,res) => {
-        try {
-            const allBlogs = await Blog.find().populate( {path :'dislikes' ,select :'firstname lastname email'})
-            .populate({path :'dislikes' ,select :'firstname lastname email'});
+   
+const getAllBlog = asyncHandler(async (req, res) => {
+    try {
+        logger.info('Fetching all blogs');
         
-        if(allBlogs) {
-            res.json(allBlogs) ;
-        }  else
-        {
-             
+        const allBlogs = await Blog.find()
+            .populate({ path: 'dislikes', select: 'firstname lastname email' })
+            .populate({ path: 'dislikes', select: 'firstname lastname email' });
+
+        if (allBlogs && allBlogs.length > 0) {
+            logger.info('Fetched all blogs:', allBlogs);
+            res.json(allBlogs);
+        } else {
+            logger.info('No blogs found');
+            res.json("There are no blogs");
         }
-        res.json("there is no blog")
-        }catch(e){
-            throw new Error("somthing went wrong !");
-            } 
-        }
+    } catch (e) {
+        logger.error('Error fetching all blogs:', e);
+        res.status(500).json({ message: "Something went wrong!" });
+    }
+});
+
+
+// 4 - update All blogs
+
+const updateBlog = asyncHandler(async (req, res) => {
+    const newBlogInf = req.body;
+    const { blogId } = req.params;
+    idValidator(blogId);
+
+    try {
+        logger.info(`Updating blog with ID ${blogId}:`, newBlogInf);
+        
+        const updatedBlog = await Blog.findByIdAndUpdate(
+            { _id: blogId },
+            { $set: newBlogInf },
+            { new: true }
         );
-    
-           // 4 - update All blogs
 
-           const updateBlog = asyncHandler(async (req, res) => {
-            const newBlogInf  = req.body;
-            const { blogId } = req.params; 
-            idValidator(blogId);
+        if (updatedBlog) {
+            logger.info('Updated blog:', updatedBlog);
+            res.json(updatedBlog);
+        } else {
+            logger.info(`No blog found with ID ${blogId}`);
+            res.json("There is no blog with this id");
+        }
+    } catch (e) {
+        logger.error('Error updating blog:', e);
+        res.status(500).json({ message: "Something went wrong!" });
+    }
+});
 
-                  try {
-                const updatedBlog = await Blog.findByIdAndUpdate(
-                    { _id: blogId }, 
-                    {$set : newBlogInf},
-                    { new: true }
-                );
-        
-                if (updatedBlog) {
-                    res.json(updatedBlog);
-                } else {
-                    res.json("There is no blog with this id");
-                }
-            } catch (e) {
-                throw new Error(e.message);
-            }
-        });
-        
+
+
+
         
           // 5 - delete blog 
-
-            const deleteBlog = asyncHandler( async(req,res) => {
-                const {blogId}=req.params ;
-                idValidator(blogId);
-
-                try {
-                    const deletedBlog = await Blog.findByIdAndDelete({_id : blogId});
+          const deleteBlog = asyncHandler(async (req, res) => {
+            const { blogId } = req.params;
+            idValidator(blogId);
+        
+            try {
+                logger.info(`Deleting blog with ID ${blogId}`);
                 
-                if(deletedBlog) {
-                    res.json(deletedBlog)
-                }  else
-                {
-                     
-                    res.json("there is no blog")
+                const deletedBlog = await Blog.findByIdAndDelete({ _id: blogId });
+        
+                if (deletedBlog) {
+                    logger.info('Deleted blog:', deletedBlog);
+                    res.json(deletedBlog);
+                } else {
+                    logger.info(`No blog found with ID ${blogId}`);
+                    res.json("There is no blog");
                 }
-                }catch(e){
-                    throw new Error("somthing went wrong !");
-                    } 
-                }
-                );
-
+            } catch (e) {
+                logger.error('Error deleting blog:', e);
+                res.status(500).json({ message: "Something went wrong!" });
+            }
+        });
 
 
 

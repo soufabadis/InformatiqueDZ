@@ -10,10 +10,14 @@ const {errorHandler} = require("./middlewares/erreurHandler");
 const {notFound} = require('./middlewares/erreurHandler');
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
+const helmet = require('helmet');
+
 
 const PORT = process.env.PORT || 4000; 
 
 connectToDatabase(); // Calling the connectToDatabase 
+app.use(helmet());
+
 app.use(morgan("dev"));
 // Use built-in middleware for parsing JSON and URL-encoded request bodies
 app.use(express.json());
