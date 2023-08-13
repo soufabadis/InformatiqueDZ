@@ -175,7 +175,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 const findUserById = asyncHandler(async (req, res, next) => {
   const userId = req.params.userId;
   try {
-    const user = await Users.findOne({ _id: userId });
+    const user = await Users.findOne({ _id: userId }).populate({path : "wishlist" , select : "title quntity price  "});
 
     if (user) {
       const userWithoutPassword = { ...user.toObject() };
