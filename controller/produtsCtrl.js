@@ -1,13 +1,18 @@
 const asyncHandler = require("express-async-handler");
 const Product = require("../models/product");
 const slugify = require("slugify");
+const logger = require("../config/logger");
+const Users = require("../models/userModel");
+
 
 /*
  1-create new product ctrl 
  2-get product by ID 
  3- get all products
  4- update product
- 5-title
+ 5-delete product
+ 6- add to wish liste
+
 */
 
 
@@ -126,7 +131,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 });
 
-// delete product by id 
+// 5 - delete product by id 
 
 const deletedProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
@@ -148,6 +153,51 @@ const deletedProduct = asyncHandler(async (req, res) => {
   }
 });
 
+ // 6- add to wish liste
+
+ const addToWishList = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id; 
+
+    // Find the user by ID
+    let user = await Users.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const productId = req.params.productId;
+
+    // Find the product by ID
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const alreadyExist = user.wishlist.includes(productId);
+
+    // Check if the product is already in the wishlist
+    if (alreadyExist) {
+      user.wishlist.pull(productId);
+      res.status(200).send(" product removed cause is already in the wishlist")
+    } else {
+      // Add the product to the user's wishlist
+      user.wishlist.push(productId);
+    }
+
+    await user.save();
+
+    res.json({ message: 'Product added to wishlist' });
+  } catch (error) {
+    console.error(error); // Log the error for debugging
+    res.status(500).json({ message: 'Internal server error' });
+    logger.error( error)
+  }
+});
+
+module.exports = addToWishList;
 
 
-module.exports={createProduct,getaProduct, getAllProducts,updateProduct,deletedProduct};
+
+module.exports={createProduct,getaProduct, getAllProducts,updateProduct,deletedProduct,addToWishList};

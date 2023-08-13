@@ -49,10 +49,10 @@ var userSchema = new mongoose.Schema({
         type :mongoose.Schema.Types.ObjectId ,
         ref : 'address'  
     },
-    wishlist : {
+    wishlist : [{
         type : mongoose.Schema.Types.ObjectId ,
-        ref : 'product'
-    }, 
+        ref : 'Product'
+    }], 
     passwordChangeDate : {
         type :Date ,
      } ,

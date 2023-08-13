@@ -2,6 +2,8 @@ const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const Users = require("../models/userModel");
 const dotenv = require("dotenv");
+const logger = require('../config/logger');
+
 dotenv.config();
 const fs = require("fs");
 
