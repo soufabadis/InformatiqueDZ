@@ -12,7 +12,7 @@ const Users = require("../models/userModel");
  4- update product
  5-delete product
  6- add to wish liste
-
+ 7- add rating
 */
 
 
@@ -196,8 +196,45 @@ const deletedProduct = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = addToWishList;
+    // 7- add rating
+
+    const ratingProduct = asyncHandler(async (req, res) => {
+      try {
+        const { value, productId } = req.body;
+        const userId = req.user._id;
+        const filter = { _id: productId, 'rating.postedby': userId };
+        const options = { new: true };
+        
+        const product = await Product.findById(productId);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+        const existingRatingIndex = product.rating.findIndex(rating => rating.postedby.toString() === userId.toString());
+    
+        if (existingRatingIndex !== -1) {
+          const update = { $set: { 'rating.$.star': value } };
+          const updatedProduct = await Product.findOneAndUpdate(filter, update, options);
+    
+          return updateRatingsAndRespond(res, updatedProduct);
+        } else {
+          product.rating.push({ star: value, postedby: userId });
+    
+          return updateRatingsAndRespond(res, product);
+        }
+      } catch (error) {
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+    
+    async function updateRatingsAndRespond(res, product) {
+      const totalRatings = product.rating.length;
+      const totalRatingSum = product.rating.reduce((sum, item) => sum + item.star, 0);
+      product.totalRating = totalRatingSum;
+      product.averageRating = Math.round(totalRatingSum / totalRatings);
+      
+      await product.save();
+      return res.status(200).json(product);
+    }
+    
 
 
-
-module.exports={createProduct,getaProduct, getAllProducts,updateProduct,deletedProduct,addToWishList};
+module.exports={createProduct,getaProduct, getAllProducts,updateProduct,deletedProduct,addToWishList,ratingProduct};

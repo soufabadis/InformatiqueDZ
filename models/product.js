@@ -9,7 +9,6 @@ const ratingSchema = new mongoose.Schema({
   },
   star: {
     type: Number,
-    required: true,
   },
 });
 
@@ -77,7 +76,24 @@ const productSchema = new mongoose.Schema(
     color: {
       type: String,
     },
-    rating: [ratingSchema],
+    rating: [  {
+      postedby: {
+       type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    star : {
+      type: Number,
+    }},],
+
+     totalRating : {
+         type : Number ,
+         default : 0
+     },
+     averageRating : {
+      type : Number ,
+      default : 0
+     },
+
     slug: {
       type: String,
       unique: true,
