@@ -225,7 +225,7 @@ const deletedProduct = asyncHandler(async (req, res) => {
       }
     });
     
-    async function updateRatingsAndRespond(res, product) {
+      const   updateRatingsAndRespond =  asyncHandler( async function(res, product) {
       const totalRatings = product.rating.length;
       const totalRatingSum = product.rating.reduce((sum, item) => sum + item.star, 0);
       product.totalRating = totalRatingSum;
@@ -234,7 +234,7 @@ const deletedProduct = asyncHandler(async (req, res) => {
       await product.save();
       return res.status(200).json(product);
     }
-    
+      );
 
 
 module.exports={createProduct,getaProduct, getAllProducts,updateProduct,deletedProduct,addToWishList,ratingProduct};
