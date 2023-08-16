@@ -5,34 +5,36 @@ const cloudinary = require('cloudinary').v2;
 
 // Configure Cloudinary with your credentials
 cloudinary.config({
-  cloud_name: 'your_cloud_name',
-  api_key: 'your_api_key',
-  api_secret: 'your_api_secret'
-});
+  cloud_name: process.env.CLOUD_NAME ,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET});
 
-const directoryPath1 = path.join(__dirname, 'images'); 
 
-//   upload images from a directory
-const uploadImagesFromDirectory =  async function(directoryPath){
+//   upload images 
+const uploadImages =  async function(res,req){
   try {
-    const files = await fs.promises.readdir(directoryPath);
+
+    const images = req.files;
+    const uploadedImages = [];
+
+    for (const image of images) {
+      const result = await cloudinary.uploader.upload(image.buffer, {
+        folder: 'uploads' // Optional folder in Cloudinary
+      });
+
+      uploadedImages.push(result.secure_url);
+    }
     
-    files.forEach(async file => {
-      const imagePath = path.join(directoryPath, file);
-      
-      try {
-        const result = await cloudinary.uploader.upload(imagePath);
-        console.log('Image uploaded:', result);
-      } catch (error) {
-        console.error(`Error uploading image '${file}':`, error);
-        logger.error(`Error uploading image '${file}':`, error);
+    res.json({ uploadedImages });
+
+                
       }
-    });
-  } catch (error) {
-    console.error('Error reading directory:', error);
-    logger.error('Error reading directory:', error);
+    
+   catch (error) {
+    console.error('Error upload file:', error);
+    logger.error('Error upload file:', error);
 
   }
-};
+}
 
-// Call the function to start uploading images from the directory
+module.exports=uploadImages;
