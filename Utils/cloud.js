@@ -1,5 +1,4 @@
-const fs = require('fs');
-const path = require('path');
+
 const logger = require('../config/logger');
 const cloudinary = require('cloudinary').v2;
 
@@ -11,30 +10,35 @@ cloudinary.config({
 
 
 //   upload images 
-const uploadImages =  async function(res,req){
+
+const uploadImagesToCloud = async function(images) {
   try {
-
-    const images = req.files;
-    const uploadedImages = [];
-
-    for (const image of images) {
-      const result = await cloudinary.uploader.upload(image.buffer, {
-        folder: 'uploads' // Optional folder in Cloudinary
+    const uploadPromises = images.map((image) => {
+      return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload(
+          image.path, // Use the path to the image file
+          { resource_type: "auto" }, // Specify the resource type
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve({
+                url : result.secure_url
+              });
+            }
+          }
+        );
       });
+    });
 
-      uploadedImages.push(result.secure_url);
-    }
-    
-    res.json({ uploadedImages });
+    const uploadedImages = await Promise.all(uploadPromises);
 
-                
-      }
-    
-   catch (error) {
-    console.error('Error upload file:', error);
-    logger.error('Error upload file:', error);
-
+    return uploadedImages;
+  } catch (error) {
+    console.error('Error uploading files:', error);
+    logger.error('Error uploading files:', error);
+    throw error; // Rethrow the error to be caught by the caller
   }
-}
+};
 
-module.exports=uploadImages;
+module.exports = uploadImagesToCloud;

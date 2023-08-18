@@ -3,7 +3,8 @@ const Product = require("../models/product");
 const slugify = require("slugify");
 const logger = require("../config/logger");
 const Users = require("../models/userModel");
-
+const uploadImagesToCloud = require("../Utils/cloud");
+const idValidator = require("../Utils/idValidator");
 
 /*
  1-create new product ctrl 
@@ -15,29 +16,27 @@ const Users = require("../models/userModel");
  7- add rating
 */
 
-
-// 1-create new product ctrl 
-const createProduct = asyncHandler(async(req,res)=>  {
-    let product =req.body;
-       if(product) {
-        const newProduct = await Product.create(product);
-        res.json('new product' +newProduct);
-        }
-        else {
-            throw new Error(error.message);
-        }
+// 1-create new product ctrl
+const createProduct = asyncHandler(async (req, res) => {
+  let product = req.body;
+  if (product) {
+    const newProduct = await Product.create(product);
+    res.json("new product" + newProduct);
+  } else {
+    throw new Error(error.message);
+  }
 });
 
-// 2-get product by ID 
+// 2-get product by ID
 
 const getaProduct = asyncHandler(async (req, res) => {
-    const {productId} = req.params; 
-    const findProduct = await Product.findById(productId);
-    if (!findProduct) {
-      throw new Error("There is no product with this id: " + productId);
-    }
-    res.json(findProduct);
-  });
+  const { productId } = req.params;
+  const findProduct = await Product.findById(productId);
+  if (!findProduct) {
+    throw new Error("There is no product with this id: " + productId);
+  }
+  res.json(findProduct);
+});
 
 //3- get all products
 
@@ -53,30 +52,33 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
   // fliltre product price
   const queryString = JSON.stringify(objQuery);
-  const newqueryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+  const newqueryString = queryString.replace(
+    /\b(gte|gt|lte|lt)\b/g,
+    (match) => `$${match}`
+  );
   const objQuery2 = JSON.parse(newqueryString);
 
   let allProductsQuery = Product.find(objQuery2);
 
   // 3-2 Sort products.
   if (req.query.sort) {
-    const sortedBy = req.query.sort.split(',').join(' ');
+    const sortedBy = req.query.sort.split(",").join(" ");
     allProductsQuery = allProductsQuery.sort(sortedBy);
   } else {
-    allProductsQuery = allProductsQuery.sort('createdAt');
+    allProductsQuery = allProductsQuery.sort("createdAt");
   }
 
-  // 3-3 limite the fields 
+  // 3-3 limite the fields
 
   if (req.query.fields) {
-    const limitedBy = req.query.fields.split(',').join(' ');
+    const limitedBy = req.query.fields.split(",").join(" ");
     allProductsQuery = allProductsQuery.select(limitedBy);
     console.log(limitedBy);
   } else {
-    allProductsQuery = allProductsQuery.select('-__v');
+    allProductsQuery = allProductsQuery.select("-__v");
   }
 
-  // 3-4 Pagination 
+  // 3-4 Pagination
   let page = req.query.page;
   const limit = req.query.limit || 3; // Default limit is 3
 
@@ -85,18 +87,15 @@ const getAllProducts = asyncHandler(async (req, res) => {
   }
 
   const skipCount = (page - 1) * limit;
-//  Count the total documents without processing the data
-  if(req.query.page){
+  //  Count the total documents without processing the data
+  if (req.query.page) {
     const countProduct = await Product.countDocuments();
-    if(skipCount >= countProduct )
-    throw new Error('this page not exist');
+    if (skipCount >= countProduct) throw new Error("this page not exist");
   }
 
-
- allProductsQuery =  allProductsQuery.skip(skipCount).limit(limit);
+  allProductsQuery = allProductsQuery.skip(skipCount).limit(limit);
 
   try {
-
     // execute all previous proccess
     const allProducts = await allProductsQuery.exec();
 
@@ -110,20 +109,19 @@ const getAllProducts = asyncHandler(async (req, res) => {
   }
 });
 
-
 // 4- update product
 
 const updateProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   if (req.body.title) {
-    req.body.slug = slugify(req.body.title); 
+    req.body.slug = slugify(req.body.title);
   }
 
   if (!productId) {
     throw new Error("Something went wrong");
   } else {
     const updatedProduct = await Product.findOneAndUpdate(
-      { _id: productId }, 
+      { _id: productId },
       { $set: req.body },
       { new: true }
     );
@@ -131,7 +129,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 });
 
-// 5 - delete product by id 
+// 5 - delete product by id
 
 const deletedProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
@@ -143,27 +141,27 @@ const deletedProduct = asyncHandler(async (req, res) => {
       const product = await Product.findByIdAndDelete(productId);
 
       if (!product) {
-        return res.json({ message: 'Product not found' });
+        return res.json({ message: "Product not found" });
       }
 
-      res.json({ message: 'Product deleted successfully' });
+      res.json({ message: "Product deleted successfully" });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
- // 6- add to wish liste
+// 6- add to wish liste
 
- const addToWishList = asyncHandler(async (req, res) => {
+const addToWishList = asyncHandler(async (req, res) => {
   try {
-    const userId = req.user._id; 
+    const userId = req.user._id;
 
     // Find the user by ID
     let user = await Users.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const productId = req.params.productId;
@@ -172,7 +170,7 @@ const deletedProduct = asyncHandler(async (req, res) => {
     const product = await Product.findById(productId);
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
 
     const alreadyExist = user.wishlist.includes(productId);
@@ -180,7 +178,7 @@ const deletedProduct = asyncHandler(async (req, res) => {
     // Check if the product is already in the wishlist
     if (alreadyExist) {
       user.wishlist.pull(productId);
-      res.status(200).send(" product removed cause is already in the wishlist")
+      res.status(200).send(" product removed cause is already in the wishlist");
     } else {
       // Add the product to the user's wishlist
       user.wishlist.push(productId);
@@ -188,53 +186,100 @@ const deletedProduct = asyncHandler(async (req, res) => {
 
     await user.save();
 
-    res.json({ message: 'Product added to wishlist' });
+    res.json({ message: "Product added to wishlist" });
   } catch (error) {
     console.error(error); // Log the error for debugging
-    res.status(500).json({ message: 'Internal server error' });
-    logger.error( error)
+    res.status(500).json({ message: "Internal server error" });
+    logger.error(error);
   }
 });
 
-    // 7- add rating
+// 7- add rating
 
-    const ratingProduct = asyncHandler(async (req, res) => {
-      try {
-        const { value, productId } = req.body;
-        const userId = req.user._id;
-        const filter = { _id: productId, 'rating.postedby': userId };
-        const options = { new: true };
-        
-        const product = await Product.findById(productId);
-        if (!product) return res.status(404).json({ message: 'Product not found' });
-    
-        const existingRatingIndex = product.rating.findIndex(rating => rating.postedby.toString() === userId.toString());
-    
-        if (existingRatingIndex !== -1) {
-          const update = { $set: { 'rating.$.star': value } };
-          const updatedProduct = await Product.findOneAndUpdate(filter, update, options);
-    
-          return updateRatingsAndRespond(res, updatedProduct);
-        } else {
-          product.rating.push({ star: value, postedby: userId });
-    
-          return updateRatingsAndRespond(res, product);
-        }
-      } catch (error) {
-        return res.status(500).json({ message: 'Internal server error' });
-      }
-    });
-    
-      const   updateRatingsAndRespond =  asyncHandler( async function(res, product) {
-      const totalRatings = product.rating.length;
-      const totalRatingSum = product.rating.reduce((sum, item) => sum + item.star, 0);
-      product.totalRating = totalRatingSum;
-      product.averageRating = Math.round(totalRatingSum / totalRatings);
-      
-      await product.save();
-      return res.status(200).json(product);
-    }
+const ratingProduct = asyncHandler(async (req, res) => {
+  try {
+    const { value, productId } = req.body;
+    const userId = req.user._id;
+    const filter = { _id: productId, "rating.postedby": userId };
+    const options = { new: true };
+
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const existingRatingIndex = product.rating.findIndex(
+      (rating) => rating.postedby.toString() === userId.toString()
+    );
+
+    if (existingRatingIndex !== -1) {
+      const update = { $set: { "rating.$.star": value } };
+      const updatedProduct = await Product.findOneAndUpdate(
+        filter,
+        update,
+        options
       );
 
+      return updateRatingsAndRespond(res, updatedProduct);
+    } else {
+      product.rating.push({ star: value, postedby: userId });
 
-module.exports={createProduct,getaProduct, getAllProducts,updateProduct,deletedProduct,addToWishList,ratingProduct};
+      return updateRatingsAndRespond(res, product);
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+const updateRatingsAndRespond = asyncHandler(async function (res, product) {
+  const totalRatings = product.rating.length;
+  const totalRatingSum = product.rating.reduce(
+    (sum, item) => sum + item.star,
+    0
+  );
+  product.totalRating = totalRatingSum;
+  product.averageRating = Math.round(totalRatingSum / totalRatings);
+
+  await product.save();
+  return res.status(200).json(product);
+});
+
+// 8- upload Image
+const uploadProductImage = asyncHandler(async (req, res) => {
+  const {id} = req.params;
+  const url = [];
+
+  idValidator(id); 
+
+  try {
+    const uploader = await uploadImagesToCloud(req.files);
+    // Push all the URLs of the uploaded images to the 'url' array
+    for (const uploadedFile of uploader) {
+      url.push(uploadedFile.url);
+    }
+   
+    const product = await Product.findByIdAndUpdate(
+      id ,
+      { image: url },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Image(s) uploaded successfully.",
+      uploadedImages: url,
+    });
+  } catch (error) {
+     throw new Error("failed to upload "+error) ;
+  }
+});
+
+module.exports = uploadProductImage;
+
+module.exports = {
+  createProduct,
+  getaProduct,
+  getAllProducts,
+  updateProduct,
+  deletedProduct,
+  addToWishList,
+  ratingProduct,
+  uploadProductImage,
+};
