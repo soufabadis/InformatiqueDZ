@@ -1,16 +1,7 @@
 const mongoose = require('mongoose');
 const slug = require('mongoose-slug-generator');
 
-// Define the rating schema (nested within the product schema)
-const ratingSchema = new mongoose.Schema({
-  postedby: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  star: {
-    type: Number,
-  },
-});
+
 
 // Array of possible phone brands
 const phoneBrands = [
@@ -56,9 +47,7 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category', // References the 'Category' model
     },
-    image: {
-      type: Array,
-    },
+    image: [] ,
     quantity: {
       type: Number,
       required: true,
