@@ -11,7 +11,8 @@ const { createUser,
         logout,
         updatePassword,
         updatePasswordToken,
-        resetPassword} = require("../controller/authController"); 
+        resetPassword,
+        loginAdminCotroller} = require("../controller/authController"); 
 const {authMiddleware,isAdmin} = require('../middlewares/authMiddlewares');
 
 const router = express.Router();
@@ -21,6 +22,7 @@ router.put('/password',authMiddleware ,updatePassword);
 router.post('/reset-password-token',updatePasswordToken);
 router.put('/reset-password/:token',resetPassword);
 router.post('/login', loginCotroller);
+router.post('/admin-login', loginAdminCotroller);
 router.get('/all-users', getAllUsers);
 router.get('/refresh', refreshTokenHandler);
 router.get('/logout', logout);
@@ -29,6 +31,7 @@ router.delete('/delete-user/:userId', deleteUserById);
 router.put('/update-user/:userId', authMiddleware,isAdmin,updateUserById);
 router.put('/block-user/:userId', authMiddleware,isAdmin,blockUser);
 router.put('/unblock-user/:userId', authMiddleware,isAdmin,unBlockUser);
+
 
 
 module.exports = router; // Export the router instance

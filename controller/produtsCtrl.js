@@ -5,15 +5,18 @@ const logger = require("../config/logger");
 const Users = require("../models/userModel");
 const uploadImagesToCloud = require("../Utils/cloud");
 const idValidator = require("../Utils/idValidator");
+const fs = require('fs');
+
 
 /*
- 1-create new product ctrl 
- 2-get product by ID 
- 3- get all products
- 4- update product
- 5-delete product
- 6- add to wish liste
- 7- add rating
+ 1-Create new product ctrl 
+ 2-Get product by ID 
+ 3- Get all products
+ 4- Update product
+ 5-Delete product
+ 6- Add to wish liste
+ 7- Add rating
+ 8 -Uplaod product images
 */
 
 // 1-create new product ctrl
@@ -156,7 +159,7 @@ const deletedProduct = asyncHandler(async (req, res) => {
 const addToWishList = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
-
+        
     // Find the user by ID
     let user = await Users.findById(userId);
 
@@ -255,6 +258,11 @@ const uploadProductImage = asyncHandler(async (req, res) => {
     for (const uploadedFile of uploader) {
       url.push(uploadedFile.url);
     }
+
+     // Delete the locally uploaded files
+     for (const uploadedFile of req.files) {
+      fs.unlinkSync(uploadedFile.path);
+    }
    
     const product = await Product.findByIdAndUpdate(
       id ,
@@ -271,7 +279,6 @@ const uploadProductImage = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = uploadProductImage;
 
 module.exports = {
   createProduct,

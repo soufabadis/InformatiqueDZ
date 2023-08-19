@@ -3,6 +3,9 @@ const Users = require("../models/userModel");
 const asyncHandler = require('express-async-handler');
 const idValidator = require("../Utils/idValidator");
 const logger = require('../config/logger');
+const uploadImagesToCloud = require("../Utils/cloud");
+const fs = require('fs');
+
 
  /* 1- create new Blog 
     2 - find a blog 
@@ -270,6 +273,40 @@ const updateBlog = asyncHandler(async (req, res) => {
                 }
             });
             
-         
 
-module.exports={createBlog,findBlog,getAllBlog,updateBlog,deleteBlog,isDislike,isLike};
+            
+            const uploadBlogsImage = asyncHandler(async (req, res) => {
+                const {id} = req.params;
+                const url = [];
+                idValidator(id); 
+              
+                try {
+                  const uploader = await uploadImagesToCloud(req.files);
+                  // Push all the URLs of the uploaded images to the 'url' array
+                  for (const uploadedFile of uploader) {
+                    url.push(uploadedFile.url);
+                  }
+
+                  // Delete the locally uploaded files
+                    for (const uploadedFile of req.files) {
+                        fs.unlinkSync(uploadedFile.path);
+                    }
+
+                 
+                  const blog = await Blog.findByIdAndUpdate(
+                    id ,
+                    { images: url },
+                    { new: true }
+                  );
+              
+                  res.status(200).json({
+                    message: "Image(s) uploaded successfully.",
+                    uploadedImages: url,
+                  });
+                } catch (error) {
+                   throw new Error("failed to upload "+error) ;
+                }
+              });
+              
+
+module.exports={createBlog,findBlog,getAllBlog,updateBlog,deleteBlog,isDislike,isLike,uploadBlogsImage};
