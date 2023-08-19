@@ -32,8 +32,8 @@ const privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
 const createUser = asyncHandler(async (req, res) => {
   const useremail = req.body.email;
   // Search for existing user
-  const isUser = await Users.findOne({ email: useremail });
-  if (!isUser) {
+  const isAdmin = await Users.findOne({ email: useremail });
+  if (!isAdmin) {
     // Create new user
     const newUser = await Users.create(req.body);
     res.json(newUser);
@@ -45,18 +45,18 @@ const createUser = asyncHandler(async (req, res) => {
 //2- login controller
 
 const loginCotroller = asyncHandler(async (req, res) => {
-  const userEmail = req.body.email;
+  const AdminEmail = req.body.email;
   const password = req.body.password;
-  const isUser = await Users?.findOne({ email: userEmail });
-  if (isUser) {
-    const passwordMatch = await isUser.isPassword(password);
+  const isAdmin = await Users?.findOne({ email: AdminEmail });
+  if (isAdmin) {
+    const passwordMatch = await isAdmin.isPassword(password);
     if (passwordMatch) {
-      const isUser = await Users?.findOne({ email: userEmail });
-      const refreshToken = await refreshTokenGenerator(isUser._id);
+      const isAdmin = await Users?.findOne({ email: AdminEmail });
+      const refreshToken = await refreshTokenGenerator(isAdmin._id);
       
            // update token value in db
       await Users.findOneAndUpdate(
-        { _id: isUser._id },
+        { _id: isAdmin._id },
         {
           $set: {
             refreshtoken: refreshToken
@@ -78,14 +78,14 @@ const loginCotroller = asyncHandler(async (req, res) => {
             }
           )
       res.json({
-        firstname: isUser?.firstname,
-        lastname: isUser?.lastname,
+        firstname: isAdmin?.firstname,
+        lastname: isAdmin?.lastname,
       
-        email: isUser?.email,
-        mobile: isUser?.firstname,
-        role: isUser?.role,
+        email: isAdmin?.email,
+        mobile: isAdmin?.firstname,
+        role: isAdmin?.role,
         // pass id and email to token generator
-        token: tokenGenerator(isUser?.id, isUser?.email),
+        token: tokenGenerator(isAdmin?.id, isAdmin?.email),
     } )}
     else {
       throw new Error("Invalid Credentials");
@@ -354,6 +354,62 @@ const resetPassword = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Password reset successful" });
 });
 
+// 13 - Login Admin ctrl
+
+const loginAdminCotroller = asyncHandler(async (req, res) => {
+  const AdminEmail = req.body.email;
+  const password = req.body.password;
+  const isAdmin = await Users?.findOne({ email: AdminEmail });
+
+
+  if (isAdmin) {
+    if( isAdmin.role != 'admin') throw new Error('you are not authorized')
+    const passwordMatch = await isAdmin.isPassword(password);
+    if (passwordMatch) {
+      const isAdmin = await Users?.findOne({ email: AdminEmail });
+      const refreshToken = await refreshTokenGenerator(isAdmin._id);
+      
+           // update token value in db
+      await Users.findOneAndUpdate(
+        { _id: isAdmin._id },
+        {
+          $set: {
+            refreshtoken: refreshToken
+          },
+        },
+        {
+          new: true, 
+        }
+      );
+
+     // Calculate the max age in milliseconds (e.g., 4days)
+          const maxAgeInMilliseconds = 4 * 24 * 60 * 60 * 1000;
+
+          res.cookie(
+            "refreshToken",refreshToken,
+            {
+           httpOnly:true ,
+           maxAge : maxAgeInMilliseconds ,
+            }
+          )
+      res.json({
+        firstname: isAdmin?.firstname,
+        lastname: isAdmin?.lastname,
+      
+        email: isAdmin?.email,
+        mobile: isAdmin?.firstname,
+        role: isAdmin?.role,
+        // pass id and email to token generator
+        token: tokenGenerator(isAdmin?.id, isAdmin?.email),
+    } )}
+    else {
+      throw new Error("Invalid Credentials");
+    }
+  } else {
+    throw new Error("User not found");
+  }
+});
+
 
 module.exports = {
   createUser,
@@ -369,4 +425,5 @@ module.exports = {
   updatePassword,
   updatePasswordToken ,
   resetPassword ,
+  loginAdminCotroller ,
 };

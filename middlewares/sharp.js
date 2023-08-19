@@ -1,4 +1,5 @@
 const sharp = require('sharp');
+const fs = require('fs');
 
 const resizeImage = (folderName) => async (req, res, next) => {
   if (!req.files) return next();
@@ -10,6 +11,7 @@ const resizeImage = (folderName) => async (req, res, next) => {
         .toFormat('jpeg')
         .jpeg({ quality: 90 })
         .toFile(`public/Images/${folderName}/${file.filename}`);
+        fs.unlinkSync(`public/Images/${folderName}/${file.filename}`);
     }
     
     next();

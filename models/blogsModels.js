@@ -38,10 +38,7 @@ const userSchema = new mongoose.Schema({
             ref: 'User',
         },
     ],
-    images: {
-        type: String,
-        default: '',
-    },
+    images: [],
     author: {
         type: String,
         default: '',
