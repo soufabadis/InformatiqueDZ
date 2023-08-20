@@ -47,7 +47,7 @@ var userSchema = new mongoose.Schema({
     
     address : {
         type :mongoose.Schema.Types.ObjectId ,
-        ref : 'address'  
+        ref : 'Address'  
     },
     wishlist : [{
         type : mongoose.Schema.Types.ObjectId ,
@@ -101,7 +101,7 @@ userSchema.methods.isPassword = async function(ispassword) {
   
     this.passwordResetToken = hashedResetToken;
     this.passwordResetExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-  
+  s
     return resetToken; // Return the original token, not hashed
   };
   

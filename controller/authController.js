@@ -1,4 +1,6 @@
 const Users = require("../models/userModel");
+const Product = require("../models/product");
+const Address = require("../models/AddressModel");
 const asyncHandler = require("express-async-handler");
 const tokenGenerator = require("../config/webToken");
 const refreshTokenGenerator = require("../config/refreshToken")
@@ -410,6 +412,87 @@ const loginAdminCotroller = asyncHandler(async (req, res) => {
   }
 });
 
+ // 14 - Get wishlist 
+
+ const getWishlist = asyncHandler(async(req,res) =>{
+
+  const {_id} = req.user ;
+  try {
+    const user = await Users.findById(_id).populate('wishlist');
+    if(!user) { res.status(400).send('there is no user with this id')};
+    res.json(user);
+  }
+   catch(error) {
+    throw new Error("somthing went wrong");
+
+   }
+
+ });
+   // 15 - save Address
+   const saveAddress = asyncHandler(async (req, res) => {
+    try {
+      const { _id } = req.user;
+      const { street, city, state, postalcode } = req.body;
+  
+      const user = await Users.findById(_id).select('firstname lastname email');
+  
+      if (!user) {
+        return res.status(404).json({ error: 'User not found.' });
+      }
+        
+      // Create a new address instance
+      const newAddress = new Address({
+        street,
+        city,
+        state,
+        postalcode,
+        user : user
+      });
+  
+      // Save the new address
+      const savedAddress = await newAddress.save();
+  
+      // Update the user's address references
+      user.address = savedAddress._id;
+      await user.save();
+  
+      res.status(200).json(savedAddress);
+    } catch (error) {
+      console.error('Error adding address:', error);
+      res.status(500).json({ error: 'An error occurred while adding the address.' });
+    }
+  });
+  
+  
+
+    // 16 - get UserA dress
+
+    const getUserAddress = asyncHandler(async (req, res) => {
+      try {
+        const { _id } = req.body;
+    
+        const user = await Users.findById(_id).select('address');
+    
+        if (!user) {
+          return res.status(404).json({ error: 'User not found.' });
+        }
+    
+        if (!user.address) {
+          return res.status(404).json({ error: 'User address not found.' });
+        }
+    
+        const userAddress = await Address.findById(user.address);
+    
+        if (!userAddress) {
+          return res.status(404).json({ error: 'User address not found.' });
+        }
+    
+        res.status(200).json('User address with ID ' + _id + ' is: ' + userAddress);
+      } catch (error) {
+        console.error('Error finding user address:', error);
+        res.status(500).json({ error: 'An error occurred while finding the address.' });
+      }
+    });
 
 module.exports = {
   createUser,
@@ -426,4 +509,7 @@ module.exports = {
   updatePasswordToken ,
   resetPassword ,
   loginAdminCotroller ,
+  getWishlist ,
+  saveAddress ,
+  getUserAddress ,
 };
