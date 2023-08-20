@@ -12,7 +12,10 @@ const { createUser,
         updatePassword,
         updatePasswordToken,
         resetPassword,
-        loginAdminCotroller} = require("../controller/authController"); 
+        loginAdminCotroller,
+        getWishlist,
+        saveAddress,
+        getUserAddress} = require("../controller/authController"); 
 const {authMiddleware,isAdmin} = require('../middlewares/authMiddlewares');
 
 const router = express.Router();
@@ -31,6 +34,10 @@ router.delete('/delete-user/:userId', deleteUserById);
 router.put('/update-user/:userId', authMiddleware,isAdmin,updateUserById);
 router.put('/block-user/:userId', authMiddleware,isAdmin,blockUser);
 router.put('/unblock-user/:userId', authMiddleware,isAdmin,unBlockUser);
+router.get('/wishlist',authMiddleware,getWishlist);
+router.put('/save-address',authMiddleware,saveAddress);
+router.get('/get-address',authMiddleware,isAdmin,getUserAddress);
+
 
 
 
