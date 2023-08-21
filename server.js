@@ -16,6 +16,7 @@ const blogRouter = require("./routes/blogRouter")
 const productCategRouter = require("./routes/productCategRouter");
 const brandRouter = require("./routes/brandRouter");
 const couponRouter = require("./routes/couponRouter");
+const cartRouter = require("./routes/CartRouter");
 const {errorHandler} = require("./middlewares/erreurHandler");
 const {notFound} = require('./middlewares/erreurHandler');
 const cookieParser = require("cookie-parser");
@@ -45,7 +46,8 @@ app.use('/api/products',productsRoute);
 app.use('/api/blogs',blogRouter);
 app.use('/api/category',productCategRouter);
 app.use('/api/brands',brandRouter);
-app.use('/api/coupons',couponRouter)
+app.use('/api/coupons',couponRouter);
+app.use('/api/carts',cartRouter);
 
 // Error handler Middlwares
 //The notFound middleware should be placed after all other routes ato catch 404,
