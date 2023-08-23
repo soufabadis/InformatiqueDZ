@@ -8,18 +8,29 @@ var userSchema = new mongoose.Schema({
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'Product',
             },
-            price: Number,
             color: String,
             count: Number,
+
         
 }],
+    paymentIntent: {},
     total: Number,
-    totalAfterDiscount: Number,
+    orderStatus: {
+        type: String,
+        default : "Not Processed",
+        enum :  ["Not Processed","Cash on delivery","Processed","Dispatched","Delivered","Cancelled"]
+    },
     orderBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },
+    {
+        isCouponApplied : Boolean ;
+    }
+},
+{
+    timestamps : true
 });
 
 //Export the model
-module.exports = mongoose.model('Cart', userSchema);
+module.exports = mongoose.model('Order', userSchema);

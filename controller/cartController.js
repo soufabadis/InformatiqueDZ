@@ -4,9 +4,18 @@ const User = require("../models/userModel");
 const Cart = require('../models/cartModel'); 
 const AsyncHandler = require("express-async-handler");
 const idValidator = require("../Utils/idValidator");
+const Coupon = require('../models/couponModel');
+
+   /*
+    1 - Controller function to add a product to the cart
+    2 - Controller function to get the cart contents
+    3 - delete cart 
+    4 - Apply coupon 
+   */
 
 
-// Controller function to add a product to the cart
+    
+//  1 - Controller function to add a product to the cart
         const addToCart = AsyncHandler (async(req, res) => {
             try {
                 const cartData = req.body.cart;
@@ -97,9 +106,87 @@ const idValidator = require("../Utils/idValidator");
 }
  ) ;
 
+ // 4 - Apply coupon 
+
+
+ const applyCoupon = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const couponCode = req.body.code;
+    idValidator(userId); 
+  
+    if (!couponCode) {
+      throw new Error('No code provided');
+    }
+  
+    const isCoupon = await Coupon.findOne({ code: couponCode });
+    if (!isCoupon) {
+      throw new Error('Invalid coupon code');
+    }
+  
+    const isUser = await User.findById(userId); 
+
+    const cart = await Cart.findOne({ orderBy: userId }).populate('products.product');
+  
+        let { products, total } = cart; 
+  
+    let totalAfterDiscount = (total - total * (isCoupon.discount * 0.01)).toFixed(2);
+  
+    // Updated the update operation to set 'totalAfterDiscount' for the cart
+    const updatedCart = await Cart.findOneAndUpdate(
+      { orderBy: userId },
+      { $set: { totalAfterDiscount: totalAfterDiscount } },
+      { new: true }
+    );
+  
+    res.status(200).json({ message: 'Coupon applied successfully', cart: updatedCart });
+  });
+  
+
+  const createOrder = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    idValidator(userId); 
+
+    const cart = await Cart.findOne({ orderBy: userId }).populate('products.product');
+  
+    if (!cart) {
+      throw new Error('Cart not found');
+    }
+  
+    const isCouponApplied = cart.totalAfterDiscount < cart.total;
+  
+    // Calculate the order's total based on whether a coupon was applied
+    const orderTotal = isCouponApplied ? cart.totalAfterDiscount : cart.total;
+  
+    // Create a new order based on cart data
+    const order = new Order({
+      orderBy: userId,
+      products: cart.products.map(item => ({
+        product: item.product._id,
+        color: item.color,
+        count: item.quantity,
+      })),
+      total: orderTotal, // Set the order's total based on coupon application
+      isCouponApplied: isCouponApplied,
+    });
+  
+    // Save the order to the database
+    const savedOrder = await order.save();
+  
+    // Clear the user's cart after creating the order
+    await Cart.findOneAndDelete({ orderBy: userId });
+  
+    res.status(201).json({
+      message: 'Order created successfully',
+      order: savedOrder,
+      isCouponApplied: isCouponApplied,
+    });
+  });
+  
 
 module.exports = {
     addToCart,
     getCart,
     clearCart,
+    applyCoupon ,
+    createOrder ,
 };
