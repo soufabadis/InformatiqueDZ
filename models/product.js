@@ -44,23 +44,22 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
     category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Category', // References the 'Category' model
+      type: String,
+      
     },
     image: [] ,
     quantity: {
       type: Number,
       required: true,
-      default: 0, // Default value for quantity is 0
+      default: 0,
     },
     sold :{
       type : Number,
       default :0 ,
-      select :false,
     },
     brand: {
       type: String,
-      enum: phoneBrands, // Use the array of possible phone brands
+      enum: phoneBrands, 
     },
     color: {
       type: String,

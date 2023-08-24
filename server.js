@@ -51,7 +51,6 @@ app.use('/api/carts',cartRouter);
 
 // Error handler Middlwares
 //The notFound middleware should be placed after all other routes ato catch 404,
-
 app.use(notFound); 
 app.use(errorHandler);
 

@@ -17,10 +17,11 @@ const { createUser,
         saveAddress,
         getUserAddress} = require("../controller/authController"); 
 const {authMiddleware,isAdmin} = require('../middlewares/authMiddlewares');
+const  {userSignupValidator} = require('../Utils/validator');
 
 const router = express.Router();
 
-router.post('/register', createUser);
+router.post('/register', userSignupValidator,createUser);
 router.put('/password',authMiddleware ,updatePassword);
 router.post('/reset-password-token',updatePasswordToken);
 router.put('/reset-password/:token',resetPassword);
