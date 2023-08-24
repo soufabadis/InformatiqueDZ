@@ -14,7 +14,7 @@ var userSchema = new mongoose.Schema({
         
 }],
     total: Number,
-    totalAfterDiscount: Number,
+    totalAfterDiscount: {type : Number , default : 0},
     orderBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

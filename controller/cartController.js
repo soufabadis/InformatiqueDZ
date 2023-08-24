@@ -1,22 +1,27 @@
 const asyncHandler = require("express-async-handler");
 const Product = require("../models/product");
+const Order = require("../models/OrderModel");
 const User = require("../models/userModel");
 const Cart = require('../models/cartModel'); 
-const AsyncHandler = require("express-async-handler");
 const idValidator = require("../Utils/idValidator");
 const Coupon = require('../models/couponModel');
+var uniqid = require('uniqid');
 
    /*
     1 - Controller function to add a product to the cart
     2 - Controller function to get the cart contents
     3 - delete cart 
     4 - Apply coupon 
+    5 - Create order
+    6 - Fetch the order details from the database based on the order ID
+    7 - update order status
+
    */
 
 
     
 //  1 - Controller function to add a product to the cart
-        const addToCart = AsyncHandler (async(req, res) => {
+        const addToCart = asyncHandler (async(req, res) => {
             try {
                 const cartData = req.body.cart;
                 idValidator(req.user._id)
@@ -141,6 +146,7 @@ const Coupon = require('../models/couponModel');
     res.status(200).json({ message: 'Coupon applied successfully', cart: updatedCart });
   });
   
+   // 5 - Create order
 
   const createOrder = asyncHandler(async (req, res) => {
     const userId = req.user._id;
@@ -151,24 +157,53 @@ const Coupon = require('../models/couponModel');
     if (!cart) {
       throw new Error('Cart not found');
     }
+    const isCouponApplied = (cart.totalAfterDiscount === 0)
+    ? false
+    : (cart.totalAfterDiscount < cart.total);
   
-    const isCouponApplied = cart.totalAfterDiscount < cart.total;
-  
+
     // Calculate the order's total based on whether a coupon was applied
     const orderTotal = isCouponApplied ? cart.totalAfterDiscount : cart.total;
+
   
     // Create a new order based on cart data
     const order = new Order({
       orderBy: userId,
+      orderStatus : "Cash on delivery" ,
       products: cart.products.map(item => ({
         product: item.product._id,
         color: item.color,
-        count: item.quantity,
+        count: item.count,
       })),
-      total: orderTotal, // Set the order's total based on coupon application
+      total: orderTotal, 
       isCouponApplied: isCouponApplied,
+      paymentIntent : {
+        id : uniqid() ,
+        methode : "COD",
+        amount : orderTotal ,
+        status : "Cash on delivery " ,
+        created: new Date().toISOString(),
+        currency : "USD"
+      }
     });
-  
+
+
+// Update sold count and subtract count for each product in the cart
+
+  for (const cartItem of cart.products) {
+    const product = await Product.findById(cartItem.product._id);
+    if (product) {
+      // Update sold count
+      product.sold += cartItem.count;
+      
+      // Subtract count
+      product.quantity -= cartItem.count;
+
+      // Save the product changes
+      await product.save();
+    }
+  }
+
     // Save the order to the database
     const savedOrder = await order.save();
   
@@ -183,10 +218,61 @@ const Coupon = require('../models/couponModel');
   });
   
 
+ // 6 - Fetch the order details from the database based on the order ID
+
+ const getOrder = asyncHandler(async (req, res) => {
+  const userId = req.user._id; 
+
+const order = await Order.findOne({ orderBy: userId })
+  .populate({
+    path: 'products.product',
+    model: 'Product', 
+  })
+  .populate('orderBy', 'firstname lastname email')
+  .exec();
+
+if (!order) {
+  return res.status(404).json({ message: 'Order not found' });
+}
+
+res.status(200).json({ order });
+
+});
+ 
+// 7 - Update order
+
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const orderId = req.params.orderId; 
+  const newStatus = req.body.status; 
+
+  // Fetch the order from the database based on the order ID
+  const order = await Order.findById(orderId).populate({
+    path: 'products.product',
+    model: 'Product', 
+  })
+  .populate('orderBy', 'firstname lastname email')
+  .exec();;
+
+  if (!order) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
+
+  // Update the order status
+  order.orderStatus = newStatus;
+  order.paymentIntent.status = newStatus ;
+  await order.save();
+
+  res.status(200).json({ message: 'Order status updated successfully', order });
+});
+
+
+
 module.exports = {
     addToCart,
     getCart,
     clearCart,
     applyCoupon ,
     createOrder ,
+    getOrder ,
+    updateOrderStatus
 };

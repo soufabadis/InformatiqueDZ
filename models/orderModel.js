@@ -24,9 +24,9 @@ var userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },
-    {
-        isCouponApplied : Boolean ;
-    }
+    
+    isCouponApplied : Boolean  ,
+    
 },
 {
     timestamps : true
