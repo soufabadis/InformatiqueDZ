@@ -61,9 +61,8 @@ const productSchema = new mongoose.Schema(
       type: String,
       enum: phoneBrands, 
     },
-    color: {
-      type: String,
-    },
+    color: [],
+    tags : [],
     rating: [  {
       postedby: {
        type: mongoose.Schema.Types.ObjectId,

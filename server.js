@@ -2,7 +2,6 @@ const dotenv = require('dotenv');
 const connectToDatabase = require('./database/connection.'); // Corrected require statement
 
 dotenv.config();
-const PORT = process.env.PORT || 4000; 
 
 // Calling the connectToDatabase 
 connectToDatabase(); 
@@ -17,6 +16,8 @@ const productCategRouter = require("./routes/productCategRouter");
 const brandRouter = require("./routes/brandRouter");
 const couponRouter = require("./routes/couponRouter");
 const cartRouter = require("./routes/CartRouter");
+const colorRouter = require("./routes/colorRouter");
+const inquiryRouter = require("./routes/inquiryRouter");
 const {errorHandler} = require("./middlewares/erreurHandler");
 const {notFound} = require('./middlewares/erreurHandler');
 const cookieParser = require("cookie-parser");
@@ -34,7 +35,7 @@ app.use(helmet());
 app.use(cors());
 app.use(limiter);
 app.use(compression());
-app.use(morgan("dev"));
+if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 // Use built-in middleware for parsing JSON and URL-encoded request bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -48,6 +49,9 @@ app.use('/api/category',productCategRouter);
 app.use('/api/brands',brandRouter);
 app.use('/api/coupons',couponRouter);
 app.use('/api/carts',cartRouter);
+app.use('/api/colors',colorRouter);
+app.use('/api/inquiry',inquiryRouter);
+
 
 // Error handler Middlwares
 //The notFound middleware should be placed after all other routes ato catch 404,
@@ -56,4 +60,10 @@ app.use(errorHandler);
 
 
 // Port
-app.listen(PORT, () => console.log(`Server is running at Port ${PORT}`));
+const PORT = process.env.PORT || 4000; 
+app.listen(PORT, () =>
+	console.log(
+		`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+			
+	)
+);

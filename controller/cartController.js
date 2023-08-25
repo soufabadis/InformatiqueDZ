@@ -7,6 +7,7 @@ const idValidator = require("../Utils/idValidator");
 const Coupon = require('../models/couponModel');
 var uniqid = require('uniqid');
 
+
    /*
     1 - Controller function to add a product to the cart
     2 - Controller function to get the cart contents
