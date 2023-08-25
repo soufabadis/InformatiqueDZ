@@ -3,20 +3,23 @@ const Product = require("../models/product");
 const slugify = require("slugify");
 const logger = require("../config/logger");
 const Users = require("../models/userModel");
-const uploadImagesToCloud = require("../Utils/cloud");
+const {uploadImagesToCloud,deleteImagesFromCloud} = require("../Utils/cloud");
+
 const idValidator = require("../Utils/idValidator");
 const fs = require('fs');
 
 
 /*
- 1-Create new product ctrl 
- 2-Get product by ID 
+ 1- Create new product ctrl 
+ 2- Get product by ID 
  3- Get all products
  4- Update product
- 5-Delete product
+ 5- Delete product
  6- Add to wish liste
  7- Add rating
- 8 -Uplaod product images
+ 8- Uplaod product images
+ 9 - Delete Images from cloud 
+
 */
 
 // 1-create new product ctrl
@@ -246,17 +249,19 @@ const updateRatingsAndRespond = asyncHandler(async function (res, product) {
 });
 
 // 8- upload Image
+
 const uploadProductImage = asyncHandler(async (req, res) => {
   const {id} = req.params;
   const url = [];
 
   idValidator(id); 
-
   try {
     const uploader = await uploadImagesToCloud(req.files);
+    console.log(uploader);
+
     // Push all the URLs of the uploaded images to the 'url' array
     for (const uploadedFile of uploader) {
-      url.push(uploadedFile.url);
+      url.push(uploadedFile);
     }
 
      // Delete the locally uploaded files
@@ -280,6 +285,22 @@ const uploadProductImage = asyncHandler(async (req, res) => {
 });
 
 
+// 9- Delete Images from cloud 
+
+const deleteImages = asyncHandler(async function (req, res) {
+  
+  const publicId = req.params.public_id;
+
+  try {
+    const deletionResult = await deleteImagesFromCloud([publicId]);
+    res.json({ message: 'Image deleted successfully', deletionResult });
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while deleting the image' });
+  }
+});
+
+
+
 module.exports = {
   createProduct,
   getaProduct,
@@ -289,4 +310,5 @@ module.exports = {
   addToWishList,
   ratingProduct,
   uploadProductImage,
+  deleteImages ,
 };
