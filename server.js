@@ -10,6 +10,7 @@ connectToDatabase();
 
 const express = require('express');
 const authRouter = require("./routes/authRouter");
+const paymentRouter = require("./routes/paymentRouter");
 const productsRoute = require("./routes/ProductsRoute")
 const blogRouter = require("./routes/blogRouter")
 const productCategRouter = require("./routes/productCategRouter");
@@ -51,6 +52,7 @@ app.use('/api/coupons',couponRouter);
 app.use('/api/carts',cartRouter);
 app.use('/api/colors',colorRouter);
 app.use('/api/inquiry',inquiryRouter);
+app.use('/api/payment',paymentRouter);
 
 
 // Error handler Middlwares
