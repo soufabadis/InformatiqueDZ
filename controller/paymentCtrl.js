@@ -3,6 +3,8 @@ const asyncHandler = require('express-async-handler');
 const logger = require('../config/logger');
 const uniqid = require('uniqid'); 
 const Order = require("../models/OrderModel");
+const auditActions = require("../audit/auditActions")
+const emitAudit = require('../audit/audit.listener'); 
 
 
 const env = process.env.NODE_ENV;
@@ -17,6 +19,7 @@ paypal.configure({
 const createPayment = asyncHandler(async (req, res) => {
     const order = req.body.order;
     const uniqueId = uniqid(); 
+    const userId = req.user._id;
 
     const products = order.products.map((item) => ({
         "name": item.product.title,
@@ -60,6 +63,8 @@ const createPayment = asyncHandler(async (req, res) => {
                     }
                 }
             }
+            emitAudit(auditActions.PAYMENT_CREATE, 'Payment', uniqueId, create_payment_json, userId);
+
         });
     } catch (error) {
         logger.error(error);
@@ -72,6 +77,7 @@ const getPaymentId = asyncHandler(async (req, res) => {
     const payerId = req.query.PayerID;
     const paymentId = req.query.paymentId;
     const items = req.body;
+    const userId = req.user._id;
 
     const execute_payment_json = {
         "payer_id": payerId,
@@ -90,6 +96,8 @@ const getPaymentId = asyncHandler(async (req, res) => {
                 throw new Error("something went wrong");
             } else {
                 res.send('Success');
+                emitAudit( auditActions.PAYMENT_EXECUTE,'Payment', paymentId, execute_payment_json, userId);
+
             }
         });
     } catch (error) {
@@ -98,12 +106,17 @@ const getPaymentId = asyncHandler(async (req, res) => {
 });
 
 const cancelPayment = asyncHandler(async (req, res) => {
+    const orderId = req.query.orderId;
+    const userId = req.user._id;
+
+
     const cancelledOrder = await Order.findOneAndUpdate(
              { _id: orderId },
          { orderStatus: 'Cancelled' },
          { new: true }
         );
-    
+    emitAudit(auditActions.PAYMENT_CANCEL, 'Payment', orderId, { orderStatus: 'Cancelled' }, userId);
+
     res.send('cancelled');
 });
 

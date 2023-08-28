@@ -7,6 +7,8 @@ const refreshTokenGenerator = require("../config/refreshToken")
 const jwt = require("jsonwebtoken");
 const fs = require('fs');
 const idValidator = require("../Utils/idValidator");
+const auditActions = require("../audit/auditActions")
+const emitAudit = require('../audit/audit.listener'); 
 const mailler =require("../controller/emailController");
 const crypto = require("crypto")
 const dotenv = require('dotenv');
@@ -403,7 +405,17 @@ const loginAdminCotroller = asyncHandler(async (req, res) => {
         role: isAdmin?.role,
         // pass id and email to token generator
         token: tokenGenerator(isAdmin?.id, isAdmin?.email),
-    } )}
+    } )
+  
+    emitAudit(
+      auditActions.ADMIN_LOGIN,
+      'User',
+      isAdmin._id,
+      { email: isAdmin.email },
+      isAdmin._id
+    );
+
+  }
     else {
       throw new Error("Invalid Credentials");
     }
