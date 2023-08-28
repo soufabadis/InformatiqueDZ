@@ -9,6 +9,4 @@ router.get("/success", authMiddleware, getPaymentId);
 router.get("/cancel", authMiddleware, cancelPayment); 
 
 
-
-
 module.exports = router;
