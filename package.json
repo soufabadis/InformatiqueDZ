@@ -35,6 +35,8 @@
     "paypal-rest-sdk": "^1.8.1",
     "sharp": "^0.32.5",
     "slugify": "^1.6.6",
+    "swagger-autogen": "^2.23.5",
+    "swagger-ui-express": "^5.0.0",
     "uniqid": "^5.4.0",
     "winston": "^3.10.0",
     "winston-daily-rotate-file": "^4.7.1"

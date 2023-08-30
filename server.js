@@ -1,5 +1,5 @@
 const dotenv = require('dotenv');
-const connectToDatabase = require('./database/connection.'); // Corrected require statement
+const connectToDatabase = require('./database/connection.'); 
 
 dotenv.config();
 
@@ -42,6 +42,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+
 // Route
 app.use('/api/users', authRouter);
 app.use('/api/products',productsRoute);
@@ -54,6 +55,9 @@ app.use('/api/colors',colorRouter);
 app.use('/api/inquiry',inquiryRouter);
 app.use('/api/payment',paymentRouter);
 
+// Swagger ui
+const swaggerSetup = require('./swagger');
+swaggerSetup(app);
 
 // Error handler Middlwares
 //The notFound middleware should be placed after all other routes ato catch 404,
