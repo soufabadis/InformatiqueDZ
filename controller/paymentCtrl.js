@@ -63,6 +63,7 @@ const createPayment = asyncHandler(async (req, res) => {
                     }
                 }
             }
+            // Audit actions
             emitAudit(auditActions.PAYMENT_CREATE, 'Payment', uniqueId, create_payment_json, userId);
 
         });
@@ -96,6 +97,8 @@ const getPaymentId = asyncHandler(async (req, res) => {
                 throw new Error("something went wrong");
             } else {
                 res.send('Success');
+                
+             // Audit actions
                 emitAudit( auditActions.PAYMENT_EXECUTE,'Payment', paymentId, execute_payment_json, userId);
 
             }
